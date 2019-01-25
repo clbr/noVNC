@@ -58,6 +58,9 @@ export default class TightDecoder {
         } else if (this._ctl === 0x0A) {
             ret = this._pngRect(x, y, width, height,
                                 sock, display, depth);
+        } else if (this._ctl === 0x0B) {
+            ret = this._webpRect(x, y, width, height,
+                                sock, display, depth);
         } else if ((this._ctl & 0x80) == 0) {
             ret = this._basicRect(this._ctl, x, y, width, height,
                                   sock, display, depth);
@@ -95,6 +98,17 @@ export default class TightDecoder {
         }
 
         display.imageRect(x, y, "image/jpeg", data);
+
+        return true;
+    }
+
+    _webpRect(x, y, width, height, sock, display, depth) {
+        let data = this._readData(sock);
+        if (data === null) {
+            return false;
+        }
+
+        display.imageRect(x, y, "image/webp", data);
 
         return true;
     }

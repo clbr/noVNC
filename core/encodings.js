@@ -26,6 +26,7 @@ export const encodings = {
     pseudoEncodingContinuousUpdates: -313,
     pseudoEncodingCompressLevel9: -247,
     pseudoEncodingCompressLevel0: -256,
+    pseudoEncodingWEBP: -1024,
 };
 
 export function encodingName(num) {

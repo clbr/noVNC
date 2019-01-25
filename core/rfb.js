@@ -1226,8 +1226,31 @@ export default class RFB extends EventTargetMixin {
         return true;
     }
 
+    _hasWebp() {
+        /*
+        return new Promise(res => {
+            const webP = new Image();
+            webP.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
+            webP.onload = webP.onerror = function () {
+                res(webP.height === 2);
+            };
+        })
+        */
+        // It's not possible to check for webp synchronously, and hacking promises 
+        // into everything would be too time-consuming. So test for FF and Chrome.
+        var uagent = navigator.userAgent.toLowerCase();
+        var match = uagent.match(/firefox\/([0-9]+)\./);
+        if (match && parseInt(match[1]) >= 65)
+            return true;
+        match = uagent.match(/chrome\/([0-9]+)\./);
+        if (match && parseInt(match[1]) >= 23)
+            return true;
+        return false;
+    }
+
     _sendEncodings() {
         const encs = [];
+        var hasWebp;
 
         // In preference order
         encs.push(encodings.encodingCopyRect);
@@ -1251,6 +1274,8 @@ export default class RFB extends EventTargetMixin {
         encs.push(encodings.pseudoEncodingXvp);
         encs.push(encodings.pseudoEncodingFence);
         encs.push(encodings.pseudoEncodingContinuousUpdates);
+        if (this._hasWebp())
+            encs.push(encodings.pseudoEncodingWEBP);
 
         if (this._fb_depth == 24) {
             encs.push(encodings.pseudoEncodingCursor);
