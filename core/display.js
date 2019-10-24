@@ -18,11 +18,13 @@ try {
 }
 
 export default class Display {
-    constructor(target) {
+    constructor(target, video) {
         this._drawCtx = null;
         this._c_forceCanvas = false;
 
         this._renderQ = [];  // queue drawing actions for in-oder rendering
+        this._videoQ = [];
+        this._safeToAdd = false;
         this._flushing = false;
 
         // the full frame buffer (logical canvas) size
@@ -39,6 +41,34 @@ export default class Display {
 
         // The visible canvas
         this._target = target;
+        this._video = video;
+
+        window.MediaSource = window.MediaSource || window.WebKitMediaSource;
+        if (!window.MediaSource) {
+            throw new Error("MediaSource not supported");
+        }
+        this._mediaSource = new window.MediaSource();
+        this._video.src = URL.createObjectURL(this._mediaSource);
+
+        this._mediaSource.addEventListener('error', function(err) {
+            throw new Error("MSE: " + err.message);
+        });
+
+        this._mediaSource.addEventListener('sourceopen', function () {
+            this._sourceBuffer = this._mediaSource.addSourceBuffer('video/mp4; codecs="avc1.42E01E"');
+            this._mediaSource.duration = Infinity;
+
+            this._sourceBuffer.addEventListener('error', function(err) {
+                throw new Error("SourceBuffer: " + err.message);
+            });
+            this._sourceBuffer.addEventListener('updateend', function() {
+                if (this._videoQ.length == 0) {
+                    this._safeToAdd = true;
+                } else {
+                    this._sourceBuffer.appendBuffer(this._videoQ.shift());
+                }
+            }.bind(this));
+        }.bind(this));
 
         if (!this._target) {
             throw new Error("Target must be set");
@@ -255,6 +285,19 @@ export default class Display {
         }
     }
 
+    restoreCanvas() {
+        // Hide the video, show the canvas, and copy the last video data to the canvas
+        if (this._target.style.display == 'none' && false) {
+            this._target.style.display = 'block';
+            this._video.style.display = 'none';
+            this._video.pause();
+            this._renderQ.length = 0;
+
+            this._drawCtx.drawImage(this._video, 0, 0, this._fb_width, this._fb_height);
+            this.flip();
+        }
+    }
+
     // Update the visible canvas with the contents of the
     // rendering canvas
     flip(from_queue) {
@@ -383,6 +426,24 @@ export default class Display {
             'x': x,
             'y': y
         });
+    }
+
+    videoRect(arr) {
+        this._video.style.display = 'block';
+        this._target.style.display = 'none';
+
+        if (this._sourceBuffer.mode == 'segments') {
+            this._sourceBuffer.mode = 'sequence';
+        }
+
+        if (this._safeToAdd) {
+            this._sourceBuffer.appendBuffer(arr);
+            this._safeToAdd = false;
+        } else {
+            this._videoQ.push(arr);
+        }
+
+        this._video.play();
     }
 
     // start updating a tile

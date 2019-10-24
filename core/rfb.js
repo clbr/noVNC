@@ -141,6 +141,14 @@ export default class RFB extends EventTargetMixin {
         this._canvas.tabIndex = -1;
         this._screen.appendChild(this._canvas);
 
+        this._video = document.createElement('video');
+        this._video.style.display = 'none';
+        this._video.style.width = '100%';
+        this._video.style.height = '100%';
+        this._video.controls = false;
+        this._video.muted = true; // So FF and Chrome let us autoplay
+        this._target.appendChild(this._video);
+
         // Cursor
         this._cursor = new Cursor();
 
@@ -166,7 +174,7 @@ export default class RFB extends EventTargetMixin {
         // NB: nothing that needs explicit teardown should be done
         // before this point, since this can throw an exception
         try {
-            this._display = new Display(this._canvas);
+            this._display = new Display(this._canvas, this._video);
         } catch (exc) {
             Log.Error("Display exception: " + exc);
             throw exc;
