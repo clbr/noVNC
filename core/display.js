@@ -57,6 +57,7 @@ export default class Display {
         this._mediaSource.addEventListener('sourceopen', function () {
             this._sourceBuffer = this._mediaSource.addSourceBuffer('video/mp4; codecs="avc1.42E01E"');
             this._mediaSource.duration = Infinity;
+            this._safeToAdd = true;
 
             this._sourceBuffer.addEventListener('error', function(err) {
                 throw new Error("SourceBuffer: " + err.message);
@@ -241,6 +242,11 @@ export default class Display {
         this._fb_width = width;
         this._fb_height = height;
 
+        this._video.width = width;
+        this._video.style.width = width + 'px';
+        this._video.height = height;
+        this._video.style.height = height + 'px';
+
         const canvas = this._backbuffer;
         if (canvas.width !== width || canvas.height !== height) {
 
@@ -287,7 +293,7 @@ export default class Display {
 
     restoreCanvas() {
         // Hide the video, show the canvas, and copy the last video data to the canvas
-        if (this._target.style.display == 'none' && false) {
+        if (this._target.style.display == 'none') {
             this._target.style.display = 'block';
             this._video.style.display = 'none';
             this._video.pause();
