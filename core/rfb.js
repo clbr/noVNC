@@ -182,10 +182,10 @@ export default class RFB extends EventTargetMixin {
         this._display.onflush = this._onFlush.bind(this);
         this._display.clear();
 
-        this._keyboard = new Keyboard(this._canvas);
+        this._keyboard = new Keyboard(this._canvas, this._video);
         this._keyboard.onkeyevent = this._handleKeyEvent.bind(this);
 
-        this._mouse = new Mouse(this._canvas);
+        this._mouse = new Mouse(this._canvas, this._video);
         this._mouse.onmousebutton = this._handleMouseButton.bind(this);
         this._mouse.onmousemove = this._handleMouseMove.bind(this);
 

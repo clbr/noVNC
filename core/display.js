@@ -450,6 +450,7 @@ export default class Display {
         }
 
         this._video.play();
+        this._video.focus();
     }
 
     // start updating a tile

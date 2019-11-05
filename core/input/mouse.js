@@ -13,8 +13,9 @@ const WHEEL_STEP_TIMEOUT = 50; // ms
 const WHEEL_LINE_HEIGHT = 19;
 
 export default class Mouse {
-    constructor(target) {
+    constructor(target, video) {
         this._target = target || document;
+        this._video = video || document;
 
         this._doubleClickTimer = null;
         this._lastTouchPos = null;
@@ -206,7 +207,7 @@ export default class Mouse {
          *       to fire properly for the target element so we have
          *       to listen on the document element instead.
          */
-        if (e.target == this._target) {
+        if (e.target == this._target || e.target == this._video) {
             stopEvent(e);
         }
     }
@@ -214,7 +215,9 @@ export default class Mouse {
     // Update coordinates relative to target
     _updateMousePosition(e) {
         e = getPointerEvent(e);
-        const bounds = this._target.getBoundingClientRect();
+        const bounds = document.activeElement === this._video ?
+                       this._video.getBoundingClientRect() :
+                       this._target.getBoundingClientRect();
         let x;
         let y;
         // Clip to target bounds
@@ -239,16 +242,26 @@ export default class Mouse {
 
     grab() {
         const c = this._target;
+        const v = this._video;
 
         if (isTouchDevice) {
             c.addEventListener('touchstart', this._eventHandlers.mousedown);
             c.addEventListener('touchend', this._eventHandlers.mouseup);
             c.addEventListener('touchmove', this._eventHandlers.mousemove);
+
+            v.addEventListener('touchstart', this._eventHandlers.mousedown);
+            v.addEventListener('touchend', this._eventHandlers.mouseup);
+            v.addEventListener('touchmove', this._eventHandlers.mousemove);
         }
         c.addEventListener('mousedown', this._eventHandlers.mousedown);
         c.addEventListener('mouseup', this._eventHandlers.mouseup);
         c.addEventListener('mousemove', this._eventHandlers.mousemove);
         c.addEventListener('wheel', this._eventHandlers.mousewheel);
+
+        v.addEventListener('mousedown', this._eventHandlers.mousedown);
+        v.addEventListener('mouseup', this._eventHandlers.mouseup);
+        v.addEventListener('mousemove', this._eventHandlers.mousemove);
+        v.addEventListener('wheel', this._eventHandlers.mousewheel);
 
         /* Prevent middle-click pasting (see above for why we bind to document) */
         document.addEventListener('click', this._eventHandlers.mousedisable);
@@ -256,10 +269,12 @@ export default class Mouse {
         /* preventDefault() on mousedown doesn't stop this event for some
            reason so we have to explicitly block it */
         c.addEventListener('contextmenu', this._eventHandlers.mousedisable);
+        v.addEventListener('contextmenu', this._eventHandlers.mousedisable);
     }
 
     ungrab() {
         const c = this._target;
+        const v = this._video;
 
         this._resetWheelStepTimers();
 
@@ -267,14 +282,24 @@ export default class Mouse {
             c.removeEventListener('touchstart', this._eventHandlers.mousedown);
             c.removeEventListener('touchend', this._eventHandlers.mouseup);
             c.removeEventListener('touchmove', this._eventHandlers.mousemove);
+
+            v.removeEventListener('touchstart', this._eventHandlers.mousedown);
+            v.removeEventListener('touchend', this._eventHandlers.mouseup);
+            v.removeEventListener('touchmove', this._eventHandlers.mousemove);
         }
         c.removeEventListener('mousedown', this._eventHandlers.mousedown);
         c.removeEventListener('mouseup', this._eventHandlers.mouseup);
         c.removeEventListener('mousemove', this._eventHandlers.mousemove);
         c.removeEventListener('wheel', this._eventHandlers.mousewheel);
 
+        v.removeEventListener('mousedown', this._eventHandlers.mousedown);
+        v.removeEventListener('mouseup', this._eventHandlers.mouseup);
+        v.removeEventListener('mousemove', this._eventHandlers.mousemove);
+        v.removeEventListener('wheel', this._eventHandlers.mousewheel);
+
         document.removeEventListener('click', this._eventHandlers.mousedisable);
 
         c.removeEventListener('contextmenu', this._eventHandlers.mousedisable);
+        v.removeEventListener('contextmenu', this._eventHandlers.mousedisable);
     }
 }

@@ -15,8 +15,9 @@ import * as browser from "../util/browser.js";
 //
 
 export default class Keyboard {
-    constructor(target) {
+    constructor(target, video) {
         this._target = target || null;
+        this._video = video || null;
 
         this._keyDownList = {};         // List of depressed keys
                                         // (even if they are happy)
@@ -328,6 +329,10 @@ export default class Keyboard {
         this._target.addEventListener('keyup', this._eventHandlers.keyup);
         this._target.addEventListener('keypress', this._eventHandlers.keypress);
 
+        this._video.addEventListener('keydown', this._eventHandlers.keydown);
+        this._video.addEventListener('keyup', this._eventHandlers.keyup);
+        this._video.addEventListener('keypress', this._eventHandlers.keypress);
+
         // Release (key up) if window loses focus
         window.addEventListener('blur', this._eventHandlers.blur);
 
@@ -360,6 +365,11 @@ export default class Keyboard {
         this._target.removeEventListener('keydown', this._eventHandlers.keydown);
         this._target.removeEventListener('keyup', this._eventHandlers.keyup);
         this._target.removeEventListener('keypress', this._eventHandlers.keypress);
+
+        this._video.removeEventListener('keydown', this._eventHandlers.keydown);
+        this._video.removeEventListener('keyup', this._eventHandlers.keyup);
+        this._video.removeEventListener('keypress', this._eventHandlers.keypress);
+
         window.removeEventListener('blur', this._eventHandlers.blur);
 
         // Release (key up) all keys that are in a down state
