@@ -451,6 +451,13 @@ export default class Display {
 
         this._video.play();
         this._video.focus();
+
+        if (this._video.buffered.length) {
+            let end = this._video.buffered.end(this._video.buffered.length - 1);
+            let offset = end - this._video.currentTime;
+            if (offset > 0.05)
+                this._video.currentTime = end;
+        }
     }
 
     // start updating a tile
